@@ -1,0 +1,96 @@
+{
+  "theme": "light",
+  "typography": {
+    "font_family": {
+      "heading": "IBM Plex Sans, sans-serif",
+      "body": "IBM Plex Sans, sans-serif"
+    },
+    "hierarchy": {
+      "h1": "text-4xl font-bold tracking-tight text-slate-900",
+      "h2": "text-2xl font-semibold tracking-tight text-slate-800",
+      "h3": "text-lg font-medium text-slate-800",
+      "body": "text-sm text-slate-600 leading-relaxed",
+      "label": "text-xs font-semibold uppercase tracking-wider text-slate-500"
+    },
+    "instructions_to_main_agent": "Use IBM Plex Sans for a technical, serious ERP feel. Keep letter spacing tight for headings. Never use Inter."
+  },
+  "colors": {
+    "archetype": "ARCHETYPE 4: SWISS & HIGH-CONTRAST (Modified for Financial ERP)",
+    "palette": {
+      "primary": {
+        "DEFAULT": "#2563EB",
+        "foreground": "#FFFFFF",
+        "hover": "#1D4ED8"
+      },
+      "secondary": {
+        "DEFAULT": "#F1F5F9",
+        "foreground": "#0F172A",
+        "hover": "#E2E8F0"
+      },
+      "background": "#F8FAFC",
+      "surface": "#FFFFFF",
+      "border": "#E2E8F0",
+      "text": {
+        "main": "#0F172A",
+        "muted": "#64748B"
+      },
+      "status": {
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "info": "#3B82F6"
+      },
+      "sidebar": {
+        "background": "#0F172A",
+        "text": "#F8FAFC",
+        "hover": "#1E293B"
+      }
+    },
+    "instructions_to_main_agent": "Implement this color palette via Tailwind configuration. Avoid pure black or pure white except for card surfaces and absolute backgrounds. Use status colors for NF-e states (Authorized = success, Draft = warning, Cancelled = error)."
+  },
+  "layouts": {
+    "app_shell": "Sidebar navigation (dark mode styled #0F172A) on the left (w-64). Main content area on the right with a top header (h-16, sticky, white with bottom border).",
+    "dashboard_grid": "High-density Grid Mode B (Data Correlation). Use grid-cols-1 md:grid-cols-3 lg:grid-cols-4 with gap-6. Summary cards col-span-1, primary charts col-span-2 or 3.",
+    "nfe_emission_form": "Multi-step wizard layout. Use a horizontal progress bar or stepper at the top. Form sections should be contained within crisp cards with p-6 or p-8.",
+    "data_tables": "Full-width cards containing Shadcn tables. Include top bar for search/filters and bottom bar for pagination. Use flat rectangular style for rows.",
+    "instructions_to_main_agent": "Ensure grid items are direct children. Use generous padding (p-6, p-8) inside cards. Do not center-align the whole app; keep it left-aligned and structured."
+  },
+  "components": {
+    "cards": "Flat, sharp edges or subtle roundness (rounded-md max). 1px solid border (border-slate-200), no heavy shadows. On hover, slight lift and shadow-sm.",
+    "buttons": "Rectangular with subtle rounding (rounded-md). Primary buttons use brand blue. Danger actions use red.",
+    "inputs": "Shadcn input components. Focus states must have a 2px ring of primary blue (ring-blue-500) to ensure accessibility.",
+    "badges": "Pill-shaped (rounded-full) for statuses. Subtle backgrounds (e.g., bg-emerald-100 text-emerald-700) for better readability.",
+    "instructions_to_main_agent": "Use Shadcn/UI for tables, forms, select, dialogs, dropdowns. Do NOT use native HTML inputs or selects. Use Recharts for dashboard charts."
+  },
+  "motion": {
+    "hover": "Subtle background color shifts on table rows and sidebar links.",
+    "transitions": "Use specific transitions (e.g., transition-colors duration-200, transition-transform). Do NOT use 'transition-all'.",
+    "page_load": "Staggered fade-in for dashboard cards and table rows.",
+    "instructions_to_main_agent": "Keep animations minimal. This is a professional tool. Focus on micro-interactions for feedback."
+  },
+  "media": {
+    "icons_library": "@phosphor-icons/react",
+    "images": {
+      "auth_background": {
+        "url": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjBhY2NvdW50YW50fGVufDB8fHx8MTc4Mjk1ODEyMnww&ixlib=rb-4.1.0&q=85",
+        "description": "Modern glass-panel office hallway to be used as a split-screen background on the login/register page."
+      }
+    },
+    "instructions_to_main_agent": "Install @phosphor-icons/react. Use Phosphor icons for all UI elements (sidebar, buttons, table actions). Never use AI assistant emoji characters."
+  },
+  "accessibility": {
+    "contrast": "Ensure all text meets 4.5:1 minimum contrast. Use text-slate-600 or darker for body.",
+    "testing": "All interactive elements (buttons, inputs, menu items, table rows) MUST have data-testid attributes (e.g., data-testid='login-submit-button').",
+    "instructions_to_main_agent": "Strict adherence to data-testid assignment. Never rely solely on color to indicate status; always pair with text or an icon."
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You MUST NOT center align the app container. No .App { text-align: center; }",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap. Padding inside cards should be p-6 or p-8.",
+    "Never use pure black or gray gradients. Use flat solid colors for an ERP.",
+    "Do not use HTML-based components for advanced user interactions; rely on Shadcn.",
+    "Create depth through 1px borders and layered design, not heavy shadows.",
+    "When customizing Shadcn components, be mindful of opinionated rules like fixed heights.",
+    "Add 'sonner' for toasts.",
+    "DO NOT use transparent backgrounds in headers or dropdowns that overlay content."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 2 testing for new NF-e features (real SEFAZ transmission stub, DANFE QR+protocolo, CC-e endpoint, and fiscal reports). Extended /app/backend/tests/backend_test.py with 6 new tests (reports JSON, reports JSON date filter incl. empty range, reports CSV export, CC-e validation on non-authorized invoice, CC-e status precedence over text length, PDF still generates after emit). Total 20/20 backend tests pass. Frontend Playwright verified: login -> Relatorios page load -> date range Aplicar -> 3 rows rendered -> Exportar CSV download triggers file 'relatorio-nfe.csv'; invoice detail for pendente invoice shows chave_acesso, invoice-motivo about certificate, download-pdf-button and cce-button; CC-e dialog opens, submits with 15+ char text and correctly surfaces backend 400 'A CC-e so pode ser emitida para notas autorizadas'. All expected/correct behaviors given no A1 cert is configured in this env.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "InvoiceDetail (pendente)", "issues": ["cce-button is shown for status 'pendente' but backend only allows 'autorizada'. Consider hiding CC-e for non-autorizada or showing helper text. Currently error toast handles it correctly."]},
+      {"screen": "CC-e Dialog", "issues": ["Radix DialogContent console warning: 'Missing Description or aria-describedby'. Add DialogDescription for a11y."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional) Add aria-describedby / DialogDescription to CC-e Dialog to remove Radix warning.",
+    "(Optional) Restrict CC-e button visibility to status === 'autorizada' only, matching backend validation."
+  ],
+  "critical_code_review_comments": [
+    "server.py carta_correcao: input validation order (status check first, then length) is fine and matches request contract.",
+    "reports/export.csv uses ';' delimiter and utf-8-sig BOM - correct for Brazilian Excel.",
+    "_reports_data does not use MongoDB $gte/$lte; it fetches up to 5000 invoices and filters in Python. For MVP OK; consider server-side filter for scale.",
+    "nfe_utils.transmitir_sefaz uses verify=False and urllib3.disable_warnings - acceptable for SEFAZ (self-signed chain), but should ideally load SEFAZ CA bundle in production.",
+    "gerar_danfe_pdf embeds QR (build_qrcode_url) using consulta publica URL per UF - correct schema; the fallback to national URL is a good safety net.",
+    "build_evento_cce uses UTC time with fixed '-03:00' suffix which is inconsistent (mixes UTC value with BRT offset). Should convert to America/Sao_Paulo before formatting."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "100%"},
+  "test_credentials": "admin: mateus.ferreira@camainbox.com.br / Nfe@2026Admin",
+  "seed_data_creation": "Session-scoped TEST_ prefixed client (deleted), product (deleted). Two additional invoices created and left in DB (pendente/rascunho); one canceled during cancel test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite in /app/backend/tests/backend_test.py now covers 20 tests including reports JSON, reports CSV, CC-e validation. Real SEFAZ transmission cannot be exercised without A1 .pfx cert in env; emit therefore returns status='pendente' with informative motivo (expected). PDF DANFE includes QR (visual verify via /api/invoices/{id}/pdf).",
+  "rca of the issue": "N/A"
+}

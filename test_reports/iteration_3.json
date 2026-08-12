@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 3 testing for the 4 new NF-e features: Consultar Status (POST /invoices/{id}/consultar), Cancelamento oficial SEFAZ evento 110111 (POST /invoices/{id}/cancel), Relatorio PDF (GET /reports/export.pdf), and Inutilizacao de faixa (POST/GET /inutilizacoes). Extended /app/backend/tests/backend_test.py with 9 new tests. Full suite: 29/29 passed. Frontend Playwright verified: Notas page renders 'Inutilizar Numeração' button + dialog (serie/ini/fim/justificativa) that submits and surfaces backend 400 'Certificado digital A1 nao configurado' as toast; Relatorios page has both 'Exportar PDF' (data-testid=export-pdf-button) and 'Exportar CSV' buttons; invoice detail for pendente #001 shows 'Consultar Status' (returns cert 400 correctly) and 'Cancelar' button that opens dialog with confirm-cancel-button and successfully cancels locally (status -> cancelada with toast).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Notas / Inutilizar dialog", "issues": ["inutilizacoes-card data-testid element not found on Notas page when list is empty - card only renders after first record. Consider always showing card with 'Nenhuma inutilizacao' empty state for consistency."]},
+      {"screen": "InvoiceDetail cancel dialog (pendente)", "issues": ["cancel-text-input (justificativa textarea) is not rendered when invoice is not 'autorizada' - local cancel path only shows confirm button. This is functionally correct but the review contract mentions the input; ensure input is present for autorizada notes (untested in this env since no cert). Not a bug for local cancel."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional) Always render inutilizacoes-card with an empty-state message so the card is discoverable before first use.",
+    "(Optional) Show cancel-text-input in the dialog even for local cancel (or add tooltip clarifying that justificativa is only needed for SEFAZ cancel of autorizada notes)."
+  ],
+  "critical_code_review_comments": [
+    "server.py criar_inutilizacao: validation order is numero->justificativa->company->cert. Good - matches request contract. With admin's TEST company (cnpj set via test_company_get_and_update) the cert check is reached and returns 400 correctly.",
+    "server.py cancel_invoice: correctly branches on status=='autorizada' AND cert_data AND nprot for SEFAZ evento 110111, else local cancel. Justificativa >=15 chars only enforced on the SEFAZ path.",
+    "server.py consultar_invoice: correctly returns 400 'Emita a nota antes de consultar o status' when chave absent, and 400 cert message when chave present but no cert.",
+    "reports_pdf: reuses _reports_data + totais aggregation - date filter works and returns valid %PDF starting bytes. Fine.",
+    "InutilizacaoIn schema uses primitive fields; pydantic will 422 on missing serie/numero_inicial/numero_final/justificativa - tested endpoints require all four.",
+    "nfe_utils.transmitir_inutilizacao (WS NFeInutilizacao4) cannot be exercised without A1 cert - expected."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (29/29)", "frontend": "100% of exercised flows"},
+  "test_credentials": "admin: mateus.ferreira@camainbox.com.br / Nfe@2026Admin",
+  "seed_data_creation": "TEST_ clients/products created during tests; several extra invoices (rascunho/pendente/cancelada) persisted for regression. Prior session-scoped client/product are deleted by cleanup tests; new tests create their own transient client/product.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend suite in /app/backend/tests/backend_test.py now 29 tests covering all iteration 1-3 features. Real SEFAZ paths (consultar, official cancel of autorizada, inutilizacao) cannot be end-to-end tested without a real A1 .pfx and its senha configured via POST /api/company/certificate - all return 400 'Certificado digital A1 nao configurado' which is the correct/expected behavior. Frontend testids in use: inutilizar-button, inut-serie-input, inut-ini-input, inut-fim-input, inut-just-input, submit-inut-button, consultar-button, cancel-button, confirm-cancel-button, export-pdf-button (all present and wired to the API).",
+  "rca of the issue": "N/A - no defects found"
+}

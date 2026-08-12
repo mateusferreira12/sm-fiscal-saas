@@ -1,0 +1,26 @@
+{
+  "summary": "Full backend + frontend E2E testing of NF-e system completed. All 14 pytest backend tests passed (auth, company, clients, products, invoices with tax calc, emit, XML/PDF download, cancel, dashboard). Frontend Playwright E2E covered login -> save settings -> create client -> create product -> 3-step invoice wizard -> emit -> view detail with totals + downloads. Emit status 'pendente' with informative motivo about missing A1 certificate is the expected/correct behavior since no cert is uploaded.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "auth.py seed_admin uses default 'admin@example.com' fallback if ADMIN_EMAIL missing - acceptable but note.",
+    "server.py _set_cookie uses samesite='none' + secure=True which is correct for cross-site preview URL; JWT is also returned in body and used via Bearer as fallback (good).",
+    "InvoiceDetail cancel confirms via AlertDialog - good UX.",
+    "nfe_utils.assinar_xml uses sha1 which is deprecated in general but is required by SEFAZ NFe 4.00 spec - correct.",
+    "cert_password stored plaintext in Mongo - acceptable per requirement but flag for production hardening.",
+    "Consider adding pagination on clients/products/invoices list (currently .to_list(1000-2000)) - fine for MVP."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin: mateus.ferreira@camainbox.com.br / Nfe@2026Admin",
+  "seed_data_creation": "Test created TEST_ prefixed client, product, and 4 invoices during runs. Delete cleanup ran for client/product. Invoices remain in DB.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression tests in /app/backend/tests/backend_test.py cover full flow. All auth/CRUD/emit/dashboard flows verified. Real SEFAZ transmission untested by design (no A1 cert). Emit currently returns status='pendente' with motivo mentioning certificate - this is intentional.",
+  "rca of the issue": "N/A - no issues found."
+}

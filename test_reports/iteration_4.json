@@ -1,0 +1,26 @@
+{
+  "summary": "Iteration 4 testing: logo upload + no-leak, DANFE PDF still renders with/without logo, email via managed Resend proxy (delivered@resend.dev) returns 200 {status:success}, 404 for nonexistent invoice email, GET /manifestacoes/tipos returns 4 codes (210200/210210/210220/210240), POST /manifestacoes validation order (chave 44 -> tipo -> justificativa >=15 for 210220/210240 -> CNPJ -> certificate 400), GET /manifestacoes returns array. Full regression suite 40/40 passed in /app/backend/tests/backend_test.py. Frontend Playwright: login OK, nav-manifestacao loads Manifestacao page with chave/tipo/submit form and surfaces backend 400 (cert) message, /configuracoes shows upload-logo-button + logo-file-input on Empresa tab and contingencia-switch on Fiscal/SEFAZ tab, /notas invoice detail (pendente #001) shows E-mail button that opens dialog with email-input + send-email-button and returns 200 for delivered@resend.dev.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py _clean_company correctly strips cert_data, cert_password, logo_data from all GET/PUT/POST company responses; verified no leak on GET /company after logo upload.",
+    "email_invoice: 404 branch is correctly checked before payload use; email attachments include PDF (always) and XML (only if present). Uses EMERGENT_EMAIL_KEY via httpx POST to /api/v1/email/send with X-Email-Key header; returns 502 on HTTPStatusError and 500 on other errors.",
+    "criar_manifestacao: validation order matches spec (chave 44 -> tipo -> justificativa >=15 for 210220/210240 -> CNPJ -> certificate). MANIFESTO_TIPOS exposed at GET /manifestacoes/tipos with all 4 codes.",
+    "emit_invoice contingency block: only triggers when cert_data present AND res.motivo contains 'Falha na comunicacao'; uses svc_for_uf/get_svc_url + rebuilds chave/XML with tp_emis. Cannot be exercised without real A1 cert - expected.",
+    "download_pdf passes company dict (with logo_data) to nfe_utils.gerar_danfe_pdf, but note that /invoices/{id}/pdf reads logo from comp inside gerar_danfe_pdf; email_invoice does base64.b64decode(comp['logo_data']) and passes bytes explicitly - both paths work with and without logo.",
+    "CORS: allow_origins=['*'] with allow_credentials=True is technically invalid per browsers when cookies are used; JWT via Authorization header currently works, but if cookie flow is needed for a different origin, browsers may block. Consider restricting origins."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (40/40)", "frontend": "100% of exercised flows"},
+  "test_credentials": "admin: mateus.ferreira@camainbox.com.br / Nfe@2026Admin",
+  "seed_data_creation": "Session-scoped TEST_ clients/products/invoices created. Extra pendente + rascunho invoices persist (#001 pendente, #006 rascunho, etc.) - safe test data with 'TEST' prefix.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Suite now 40 tests covering iteration 1-4. Email endpoint end-to-end via managed Resend proxy verified working (both backend pytest and frontend Playwright hit real /email endpoint with delivered@resend.dev returning 200). All manifestacao/inutilizacao/consultar/cancel-official paths correctly return 400 'Certificado digital A1 nao configurado' since no A1 .pfx is uploaded - expected. Frontend testids in use: nav-manifestacao, manifesto-chave-input, manifesto-tipo-select, manifesto-just-input, manifesto-submit-button, upload-logo-button, logo-file-input, contingencia-switch, email-button, email-input, send-email-button. Table rows on /notas use onClick on <tr> (no anchor) - use row.click(force=True).",
+  "rca of the issue": "N/A - no defects found"
+}

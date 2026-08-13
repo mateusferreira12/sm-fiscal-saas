@@ -28,6 +28,16 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 app = FastAPI(title="NF-e System")
+
+# CORS deve ser configurado antes de incluir os roteadores
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_router = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO)
@@ -84,6 +94,16 @@ async def login(payload: LoginIn, response: Response):
     return {"access_token": token,
             "user": {"id": uid, "email": email, "name": user.get("name", ""),
                      "role": user.get("role", "user")}}
+
+
+# ============ Atalhos Diretos (Compatibilidade com chamadas sem /api) ============
+@app.post("/register")
+async def register_direct(payload: RegisterIn, response: Response):
+    return await register(payload, response)
+
+@app.post("/login")
+async def login_direct(payload: LoginIn, response: Response):
+    return await login(payload, response)
 
 
 @api_router.post("/auth/logout")
@@ -428,7 +448,7 @@ async def consultar_invoice(iid: str, user: dict = Depends(current_user)):
     if not cert_data:
         raise HTTPException(status_code=400, detail="Certificado digital A1 nao configurado")
     res = nfe_utils.consultar_protocolo(inv["chave_acesso"], comp,
-                                        base64.b64decode(cert_data), comp.get("cert_password", ""))
+                                         base64.b64decode(cert_data), comp.get("cert_password", ""))
     upd = {"motivo": res["motivo"]}
     if res["status"]:
         upd["status"] = res["status"]
@@ -453,7 +473,7 @@ async def cancel_invoice(iid: str, payload: CancelIn = CancelIn(), user: dict = 
         pfx = base64.b64decode(cert_data)
         senha = comp.get("cert_password", "")
         ev_xml = nfe_utils.build_evento_cancelamento(comp, inv["chave_acesso"],
-                                                     inv["nprot"], payload.justificativa.strip())
+                                                      inv["nprot"], payload.justificativa.strip())
         signed_ev = nfe_utils.assinar_xml(ev_xml, pfx, senha)
         res = nfe_utils.transmitir_evento(signed_ev, comp, pfx, senha)
         novo_status = "cancelada" if res["status"] == "registrado" else "autorizada"
@@ -693,7 +713,7 @@ async def email_invoice(iid: str, payload: EmailIn, user: dict = Depends(current
         async with httpx.AsyncClient(timeout=45) as cliente:
             resp = await cliente.post(f"{EMAIL_BASE_URL}/api/v1/email/send",
                                       headers={"X-Email-Key": email_key}, json=body)
-        resp.raise_for_status()
+            resp.raise_for_status()
     except httpx.HTTPStatusError as e:
         logger.error(f"Email falhou: {e.response.status_code} {e.response.text}")
         raise HTTPException(status_code=502, detail="Falha ao enviar o e-mail")
@@ -753,23 +773,11 @@ async def manifesto_tipos(user: dict = Depends(current_user)):
     return nfe_utils.MANIFESTO_TIPOS
 
 
+# Inclusão do roteador de rotas prefixadas /api
 app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 @app.on_event("startup")
 async def startup():
     await auth_mod.seed_admin(db)
     await db.users.create_index("email", unique=True)
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    client.close()
